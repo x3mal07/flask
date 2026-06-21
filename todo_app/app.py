@@ -34,6 +34,18 @@ def index():
     """Главная страница со списком задач"""
     return render_template('index.html', tasks=tasks)
 
+@app.route('/active')
+def show_active():
+    """Показывает только активные (невыполненные) задачи"""
+    active_tasks = [task for task in tasks if not task.get('done', False)]
+    return render_template('index.html', tasks=active_tasks)
+
+
+@app.route('/completed')
+def show_completed():
+    """Показывает только выполненные задачи"""
+    completed_tasks = [task for task in tasks if task.get('done', False)]
+    return render_template('index.html', tasks=completed_tasks)
 
 @app.route('/add', methods=['POST'])
 def add_task():
@@ -230,6 +242,6 @@ def sort_by_alpha():
         key=lambda t: t.get('text', '').lower()
     )
     return render_template('index.html', tasks=sorted_tasks)
-    
+
 if __name__ == '__main__':
     app.run(debug=True)
