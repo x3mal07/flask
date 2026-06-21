@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список дел</title>
+    <style>
+        /* Общие стили */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+            background-color: #ffffff;
+            padding: 30px 35px;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        h1 {
+            color: #1a73e8;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #e8edf3;
+            padding-bottom: 14px;
+        }
+
+        /* Форма добавления */
+        .add-form {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .add-form input[type="text"] {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid #dce1e8;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .add-form input[type="text"]:focus {
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.15);
+        }
+
+        .add-form button {
+            padding: 12px 28px;
+            background-color: #1a73e8;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .add-form button:hover {
+            background-color: #1557b0;
+        }
+
+        /* Кнопки действий */
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 22px;
+        }
+
+        .btn {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-danger {
+            background-color: #e74c3c;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: #555;
+            border: 2px solid #dce1e8;
+        }
+
+        .btn-outline:hover {
+            background-color: #f5f7fa;
+        }
+
+        /* Список задач */
+        .task-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 18px;
+            margin-bottom: 10px;
+            background-color: #f8f9fb;
+            border-radius: 14px;
+            border: 1px solid #eef1f5;
+        }
+
+        .task-item:hover {
+            background-color: #f1f4f8;
+        }
+
+        .task-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 16px;
+            accent-color: #1a73e8;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .task-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .task-text {
+            font-size: 17px;
+            color: #1e293b;
+        }
+
+        .task-text.done {
+            text-decoration: line-through;
+            color: #94a3b8;
+        }
+
+        .task-date {
+            font-size: 13px;
+            color: #94a3b8;
+        }
+
+        .task-item .delete-link {
+            color: #e74c3c;
+            text-decoration: none;
+            font-size: 20px;
+            padding: 0 8px;
+        }
+
+        .task-item .delete-link:hover {
+            color: #c0392b;
+        }
+
+        /* Пустое состояние */
+        .empty-message {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 18px;
+            padding: 40px 0;
+        }
+
+        @media (max-width: 550px) {
+            .add-form {
+                flex-direction: column;
+            }
+            .add-form button {
+                width: 100%;
+            }
+            .actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Мои задачи</h1>
+
+        <!-- Форма добавления -->
+        <form method="POST" action="/add" class="add-form">
+            <input type="text" name="task" placeholder="Введите новую задачу..." required autofocus>
+            <button type="submit">➕ Добавить</button>
+        </form>
+
+        <!-- Кнопки действий -->
+        <div class="actions">
+            <form method="POST" action="/clear_completed" style="display:inline;">
+                <button type="submit" class="btn btn-outline">✅ Очистить выполненные</button>
+            </form>
+            <a href="/delete_all" class="btn btn-danger" onclick="return confirm('Удалить все задачи?')">🗑️ Очистить всё</a>
+        </div>
+
+        <!-- Список задач -->
+        {% if tasks %}
+            <ul class="task-list">
+                {% for task in tasks %}
+                    <li class="task-item">
+                        <input type="checkbox" name="completed" value="{{ task.id }}" form="task-form">
+                        <div class="task-info">
+                            <span class="task-text">{{ task.text }}</span>
+                            <span class="task-date">📅 {{ task.created_at }}</span>
+                        </div>
+                        <a href="/delete/{{ task.id }}" class="delete-link" onclick="return confirm('Удалить задачу?')">✕</a>
+                    </li>
+                {% endfor %}
+            </ul>
+            <form method="POST" action="/clear_completed" id="task-form"></form>
+        {% else %}
+            <p class="empty-message">✨ Пока нет задач. Добавьте первую!</p>
+        {% endif %}
+    </div>
+</body>
+</html>
