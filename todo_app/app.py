@@ -74,5 +74,50 @@ def clear_completed():
         save_tasks(tasks)
     return redirect('/')
 
+@app.route('/edit/<int:task_id>', methods=['GET', 'POST'])
+def edit_task(task_id):
+    """Редактирует задачу по ID"""
+    # Находим задачу по ID
+    task = None
+    task_index = -1
+    for i, t in enumerate(tasks):
+        if t['id'] == task_id:
+            task = t
+            task_index = i
+            break
+    
+    # Если задача не найдена
+    if task is None:
+        return "Задача не найдена", 404
+    
+    # Если пользователь отправил форму (POST)
+    if request.method == 'POST':
+        new_text = request.form.get('task', '').strip()
+        old_text = task['text']
+        
+        # Проверка: пустое поле
+        if new_text == '':
+            return render_template('edit.html', 
+                                 task=task, 
+                                 message="❌ Текст не может быть пустым!",
+                                 message_type="error")
+        
+        # Проверка: текст не изменился
+        if new_text == old_text:
+            return render_template('edit.html', 
+                                 task=task, 
+                                 message="ℹ️ Ничего не изменено. Текст остался прежним.",
+                                 message_type="info")
+        
+        # Обновляем задачу
+        tasks[task_index]['text'] = new_text
+        save_tasks(tasks)
+        
+        # Перенаправляем на главную
+        return redirect('/')
+    
+    # Если пользователь просто открыл страницу (GET)
+    return render_template('edit.html', task=task)
+    
 if __name__ == '__main__':
     app.run(debug=True)
