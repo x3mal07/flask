@@ -28,10 +28,12 @@ def get_next_id(tasks):
 # Загружаем задачи при старте
 tasks = load_tasks()
 
+
 @app.route('/')
 def index():
     """Главная страница со списком задач"""
     return render_template('index.html', tasks=tasks)
+
 
 @app.route('/add', methods=['POST'])
 def add_task():
@@ -41,11 +43,13 @@ def add_task():
         new_task = {
             'id': get_next_id(tasks),
             'text': task_text,
-            'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'done': False
         }
         tasks.append(new_task)
         save_tasks(tasks)
     return redirect('/')
+
 
 @app.route('/delete/<int:task_id>')
 def delete_task(task_id):
@@ -55,6 +59,55 @@ def delete_task(task_id):
     save_tasks(tasks)
     return redirect('/')
 
+
+@app.route('/toggle/<int:task_id>')
+def toggle_task(task_id):
+    """Переключает статус выполнения задачи"""
+    for task in tasks:
+        if task['id'] == task_id:
+            task['done'] = not task['done']
+            save_tasks(tasks)
+            break
+    return redirect('/')
+
+
+@app.route('/edit/<int:task_id>', methods=['GET', 'POST'])
+def edit_task(task_id):
+    """Редактирует задачу по ID"""
+    task = None
+    task_index = -1
+    for i, t in enumerate(tasks):
+        if t['id'] == task_id:
+            task = t
+            task_index = i
+            break
+    
+    if task is None:
+        return "Задача не найдена", 404
+    
+    if request.method == 'POST':
+        new_text = request.form.get('task', '').strip()
+        old_text = task['text']
+        
+        if new_text == '':
+            return render_template('edit.html', 
+                                 task=task, 
+                                 message="❌ Текст не может быть пустым!",
+                                 message_type="error")
+        
+        if new_text == old_text:
+            return render_template('edit.html', 
+                                 task=task, 
+                                 message="ℹ️ Ничего не изменено. Текст остался прежним.",
+                                 message_type="info")
+        
+        tasks[task_index]['text'] = new_text
+        save_tasks(tasks)
+        return redirect('/')
+    
+    return render_template('edit.html', task=task)
+
+
 @app.route('/delete_all')
 def delete_all():
     """Удаляет все задачи"""
@@ -62,6 +115,7 @@ def delete_all():
     tasks = []
     save_tasks(tasks)
     return redirect('/')
+
 
 @app.route('/clear_completed', methods=['POST'])
 def clear_completed():
@@ -74,50 +128,6 @@ def clear_completed():
         save_tasks(tasks)
     return redirect('/')
 
-@app.route('/edit/<int:task_id>', methods=['GET', 'POST'])
-def edit_task(task_id):
-    """Редактирует задачу по ID"""
-    # Находим задачу по ID
-    task = None
-    task_index = -1
-    for i, t in enumerate(tasks):
-        if t['id'] == task_id:
-            task = t
-            task_index = i
-            break
-    
-    # Если задача не найдена
-    if task is None:
-        return "Задача не найдена", 404
-    
-    # Если пользователь отправил форму (POST)
-    if request.method == 'POST':
-        new_text = request.form.get('task', '').strip()
-        old_text = task['text']
-        
-        # Проверка: пустое поле
-        if new_text == '':
-            return render_template('edit.html', 
-                                 task=task, 
-                                 message="❌ Текст не может быть пустым!",
-                                 message_type="error")
-        
-        # Проверка: текст не изменился
-        if new_text == old_text:
-            return render_template('edit.html', 
-                                 task=task, 
-                                 message="ℹ️ Ничего не изменено. Текст остался прежним.",
-                                 message_type="info")
-        
-        # Обновляем задачу
-        tasks[task_index]['text'] = new_text
-        save_tasks(tasks)
-        
-        # Перенаправляем на главную
-        return redirect('/')
-    
-    # Если пользователь просто открыл страницу (GET)
-    return render_template('edit.html', task=task)
-    
+
 if __name__ == '__main__':
     app.run(debug=True)
