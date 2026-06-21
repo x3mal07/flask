@@ -293,6 +293,55 @@
             background-color: #f8f9fb;
             border-radius: 10px;
         }
+
+     /* ============================================================
+        ФОРМА ПОИСКА
+        ============================================================ */
+        .search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 16px;
+            border: 2px solid #dce1e8;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.15);
+        }
+
+     /* ============================================================
+        СОРТИРОВКА
+        ============================================================ */
+        .sort-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            padding: 10px 0;
+            border-top: 1px solid #eef1f5;
+            border-bottom: 1px solid #eef1f5;
+            align-items: center;
+        }
+
+        .sort-label {
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+            margin-right: 4px;
+        }
+
     </style>
 </head>
 <body>
@@ -309,6 +358,25 @@
             </select>
             <button type="submit">➕ Добавить</button>
         </form>
+
+        <!-- Форма поиска -->
+        <form action="/search" method="get" class="search-form">
+            <input type="text" name="q" placeholder="🔍 Поиск по задачам..." 
+                value="{{ search_query or '' }}" class="search-input">
+            <button type="submit" class="btn btn-outline">Найти</button>
+            {% if search_query %}
+                <a href="/" class="btn btn-outline">Сбросить</a>
+            {% endif %}
+        </form>
+
+        <!-- Кнопки сортировки -->
+        <div class="sort-actions">
+            <span class="sort-label">📊 Сортировка:</span>
+            <a href="/sort/date" class="btn btn-outline">📅 По дате</a>
+            <a href="/sort/status" class="btn btn-outline">✅ По статусу</a>
+            <a href="/sort/priority" class="btn btn-outline">🔴 По приоритету</a>
+            <a href="/sort/alpha" class="btn btn-outline">🔤 По алфавиту</a>
+        </div>
 
         <!-- Кнопки действий -->
         <div class="actions">

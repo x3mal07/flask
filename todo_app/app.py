@@ -169,6 +169,67 @@ def by_priority():
         reverse=True
     )
     return render_template('index.html', tasks=sorted_tasks)
+@app.route('/search')
+def search():
+    """Поиск задач по тексту"""
+    query = request.args.get('q', '').strip().lower()
+    if query:
+        filtered_tasks = [
+            task for task in tasks 
+            if query in task.get('text', '').lower()
+        ]
+    else:
+        filtered_tasks = tasks
+    return render_template('index.html', tasks=filtered_tasks, search_query=query)
+    
+    # ============================================================
+# СОРТИРОВКА
+# ============================================================
 
+@app.route('/sort/date')
+def sort_by_date():
+    """Сортировка по дате (новые сверху)"""
+    sorted_tasks = sorted(
+        tasks, 
+        key=lambda t: t.get('created_at', ''), 
+        reverse=True
+    )
+    return render_template('index.html', tasks=sorted_tasks)
+
+
+@app.route('/sort/status')
+def sort_by_status():
+    """Сортировка по статусу (сначала активные)"""
+    sorted_tasks = sorted(
+        tasks, 
+        key=lambda t: t.get('done', False)
+    )
+    return render_template('index.html', tasks=sorted_tasks)
+
+
+@app.route('/sort/priority')
+def sort_by_priority():
+    """Сортировка по приоритету (высокий → средний → низкий)"""
+    priority_order = {
+        'высокий': 1,
+        'средний': 2,
+        'низкий': 3
+    }
+    sorted_tasks = sorted(
+        tasks,
+        key=lambda t: priority_order.get(t.get('priority', 'средний'), 2)
+    )
+    return render_template('index.html', tasks=sorted_tasks)
+
+
+@app.route('/sort/alpha')
+def sort_by_alpha():
+    """Сортировка по алфавиту (А → Я)"""
+    sorted_tasks = sorted(
+        tasks, 
+        key=lambda t: t.get('text', '').lower()
+    )
+    return render_template('index.html', tasks=sorted_tasks)
+    
 if __name__ == '__main__':
     app.run(debug=True)
