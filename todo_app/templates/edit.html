@@ -145,6 +145,23 @@
             color: #1e293b;
             font-style: italic;
         }
+        
+        .priority-select {
+            width: 100%;
+            padding: 12px 18px;
+            border: 2px solid #dce1e8;
+            border-radius: 12px;
+            font-size: 16px;
+            background-color: #fff;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+            .priority-select:focus {
+                border-color: #1a73e8;
+                box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.15);
+        }
     </style>
 </head>
 <body>
@@ -168,11 +185,28 @@
                 <input type="text" id="task" name="task" value="{{ task.text }}" required autofocus>
             </div>
 
+            <!-- ↓↓↓ НОВОЕ: ВЫБОР ПРИОРИТЕТА ↓↓↓ -->
+            <div class="form-group">
+                <label for="priority">Приоритет:</label>
+                <select name="priority" id="priority" class="priority-select">
+                    <option value="высокий" {% if task.priority == 'высокий' %}selected{% endif %}>
+                        🔴 Высокий
+                    </option>
+                    <option value="средний" {% if task.priority == 'средний' %}selected{% endif %}>
+                        🟡 Средний
+                    </option>
+                    <option value="низкий" {% if task.priority == 'низкий' %}selected{% endif %}>
+                        🟢 Низкий
+                    </option>
+                </select>
+            </div>
+            <!-- ↑↑↑ НОВОЕ: ВЫБОР ПРИОРИТЕТА ↑↑↑ -->
+
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">💾 Сохранить</button>
                 <a href="/" class="btn btn-secondary">❌ Отмена</a>
             </div>
-        </form>
+    </form>
     </div>
 </body>
 </html>

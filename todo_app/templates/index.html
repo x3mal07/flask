@@ -227,12 +227,72 @@
                 .btn-toggle:hover {
                 background-color: #c8e6d0;
         }
+            .priority-select {
+                padding: 12px 16px;
+                border: 2px solid #dce1e8;
+                border-radius: 12px;
+                font-size: 16px;
+                background-color: #fff;
+                cursor: pointer;
+                outline: none;
+                transition: border-color 0.2s, box-shadow 0.2s;
+        }
 
-/* Для зачёркнутого текста */
-.task-text.done {
-    text-decoration: line-through;
-    color: #94a3b8;
-}
+        .priority-select:focus {
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.15);
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 4px;
+        }
+
+        .priority-badge.priority-высокий {
+            background-color: #fde8e8;
+            color: #c0392b;
+        }
+
+        .priority-badge.priority-средний {
+            background-color: #fff8e1;
+            color: #b85c00;
+        }
+
+        .priority-badge.priority-низкий {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        /* Цвет фона для всей задачи */
+        .task-item.priority-высокий {
+            border-left: 4px solid #e74c3c;
+        }
+
+        .task-item.priority-средний {
+            border-left: 4px solid #f39c12;
+        }
+
+        .task-item.priority-низкий {
+            border-left: 4px solid #2ecc71;
+        }
+
+        /* Для зачёркнутого текста */
+        .task-text.done {
+            text-decoration: line-through;
+            color: #94a3b8;
+        }
+        .priority-stats {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 16px;
+            padding: 10px 16px;
+            background-color: #f8f9fb;
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
@@ -241,18 +301,28 @@
 
         <!-- Форма добавления -->
         <form method="POST" action="/add" class="add-form">
-            <input type="text" name="task" placeholder="Введите новую задачу..." required autofocus>
+            <input type="text" name="task" placeholder="Введите новую задачу..." required>
+            <select name="priority" class="priority-select">
+                <option value="высокий">🔴 Высокий</option>
+                <option value="средний" selected>🟡 Средний</option>
+                <option value="низкий">🟢 Низкий</option>
+            </select>
             <button type="submit">➕ Добавить</button>
         </form>
 
         <!-- Кнопки действий -->
         <div class="actions">
+            <a href="/" class="btn btn-outline active">📋 Все</a>           <!-- ← ДОБАВЬТЕ ЭТУ СТРОКУ -->
+            <a href="/active" class="btn btn-outline">⏳ Активные</a>
+            <a href="/completed" class="btn btn-outline">✅ Выполненные</a>  <!-- ← ДОБАВЬТЕ ЭТУ СТРОКУ -->
+            <a href="/by_priority" class="btn btn-outline">📊 По приоритету</a>
+            <a href="/by_priority_active" class="btn btn-outline">📊 Активные по приоритету</a>
+            
             <form method="POST" action="/clear_completed" style="display:inline;">
-                <button type="submit" class="btn btn-outline">✅ Очистить выполненные</button>
+                <button type="submit" class="btn btn-outline">🧹 Очистить выполненные</button>
             </form>
             <a href="/delete_all" class="btn btn-danger" onclick="return confirm('Удалить все задачи?')">🗑️ Очистить всё</a>
         </div>
-
         <!-- Список задач -->
         {% if tasks %}
     <!-- Счётчик невыполненных задач -->
@@ -260,26 +330,38 @@
         📊 Осталось задач: {{ tasks|selectattr('done', 'equalto', False)|list|length }}
     </p>
 
+    <!-- Счётчик приоритетов -->
+    <p class="priority-stats">
+        🔴 Высоких: {{ tasks|selectattr('priority', 'equalto', 'высокий')|list|length }} |
+        🟡 Средних: {{ tasks|selectattr('priority', 'equalto', 'средний')|list|length }} |
+        🟢 Низких: {{ tasks|selectattr('priority', 'equalto', 'низкий')|list|length }}
+    </p>
+    
     <ul class="task-list">
         {% for task in tasks %}
-            <li class="task-item">
+            <li class="task-item priority-{{ task.priority }}">
                 <input type="checkbox" name="completed" value="{{ task.id }}" form="task-form">
                 <div class="task-info">
-                    <!-- Если задача выполнена — зачёркиваем -->
+                    <!-- Текст с зачёркиванием -->
                     {% if task.done %}
                         <span class="task-text done">{{ task.text }}</span>
                     {% else %}
                         <span class="task-text">{{ task.text }}</span>
                     {% endif %}
+                
+                    <!-- Приоритет -->
+                    <span class="priority-badge priority-{{ task.priority }}">
+                        {% if task.priority == 'высокий' %}🔴 Высокий
+                        {% elif task.priority == 'средний' %}🟡 Средний
+                        {% else %}🟢 Низкий
+                        {% endif %}
+                    </span>
+                    
                     <span class="task-date">📅 {{ task.created_at }}</span>
+                    
                     <div class="task-actions">
-                        <!-- Кнопка переключения статуса -->
-                        <a href="/toggle/{{ task.id }}" class="btn-toggle">
-                            {% if task.done %}
-                                ↩️ Отменить
-                            {% else %}
-                                ✅ Выполнить
-                            {% endif %}
+                        <a href="/toggle/{{ task.id }}" class="btn-toggle {% if task.done %}undo{% endif %}">
+                            {% if task.done %}↩️ Отменить{% else %}✅ Выполнить{% endif %}
                         </a>
                         <a href="/edit/{{ task.id }}" class="btn-edit">✏️ Редактировать</a>
                     </div>

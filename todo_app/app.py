@@ -39,12 +39,14 @@ def index():
 def add_task():
     """Добавляет новую задачу"""
     task_text = request.form.get('task', '').strip()
+    priority = request.form.get('priority', 'средний')
     if task_text:
         new_task = {
             'id': get_next_id(tasks),
             'text': task_text,
             'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'done': False
+            'done': False,       # ← ЗАПЯТАЯ ДОБАВЛЕНА!
+            'priority': priority
         }
         tasks.append(new_task)
         save_tasks(tasks)
@@ -87,7 +89,9 @@ def edit_task(task_id):
     
     if request.method == 'POST':
         new_text = request.form.get('task', '').strip()
+        new_priority = request.form.get('priority', 'средний')  # ← НОВОЕ
         old_text = task['text']
+        old_priority = task.get('priority', 'средний')  # ← НОВОЕ
         
         if new_text == '':
             return render_template('edit.html', 
@@ -95,13 +99,16 @@ def edit_task(task_id):
                                  message="❌ Текст не может быть пустым!",
                                  message_type="error")
         
-        if new_text == old_text:
+        # Проверка: ничего не изменилось
+        if new_text == old_text and new_priority == old_priority:
             return render_template('edit.html', 
                                  task=task, 
-                                 message="ℹ️ Ничего не изменено. Текст остался прежним.",
+                                 message="ℹ️ Ничего не изменено.",
                                  message_type="info")
         
+        # Обновляем задачу
         tasks[task_index]['text'] = new_text
+        tasks[task_index]['priority'] = new_priority  # ← НОВОЕ
         save_tasks(tasks)
         return redirect('/')
     
@@ -128,6 +135,40 @@ def clear_completed():
         save_tasks(tasks)
     return redirect('/')
 
+@app.route('/by_priority_active')
+def by_priority_active():
+    """Показывает активные задачи, отсортированные по приоритету"""
+    # Берём только невыполненные задачи
+    active_tasks = [task for task in tasks if not task['done']]
+    
+    priority_order = {
+        'высокий': 3,
+        'средний': 2,
+        'низкий': 1
+    }
+    
+    sorted_tasks = sorted(
+        active_tasks,
+        key=lambda task: priority_order.get(task.get('priority', 'средний'), 0),
+        reverse=True
+    )
+    return render_template('index.html', tasks=sorted_tasks)    
+
+@app.route('/by_priority')
+def by_priority():
+    """Сортирует задачи по приоритету (высокий → средний → низкий)"""
+    priority_order = {
+        'высокий': 3,
+        'средний': 2,
+        'низкий': 1
+    }
+    
+    sorted_tasks = sorted(
+        tasks,
+        key=lambda task: priority_order.get(task.get('priority', 'средний'), 0),
+        reverse=True
+    )
+    return render_template('index.html', tasks=sorted_tasks)
 
 if __name__ == '__main__':
     app.run(debug=True)
